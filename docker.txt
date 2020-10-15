@@ -1,0 +1,81 @@
+DOcker 
+-----------
+
+1) docker --version  
+
+To get the client and server version of docker.
+
+2) docker images
+To check out all the images on the machine
+
+3) docker --help 
+	To know the various available commands
+	
+4) docker <command> --help
+	eg. docker images --help
+	To get help on specific commands
+
+5) docker login 
+to login to docker hub	
+
+6) docker pull <image name>
+	eg. docker pull ubuntu
+	It will pull the image of ubuntu from docker hub for the defaultt tag.
+
+6) docker pull <image name:tag name>
+	eg. docker pull ubuntu:18.04
+	It will pull the image of ubuntu from docker hub for the defaultt tag.
+	
+7) docker rmi <image name>
+	eg. docker rmi ubuntu
+	It will remove the specific docker image
+
+8)docker run <image name>
+	e.g. docker run -it ubuntu
+ This will run the image i.e. it will create a container for that image.
+
+9) docker start
+
+10) docker stop
+
+11) docker ps
+
+12) docker system df
+To check the system space usage.
+
+13) docker system prune
+To remove all the docker images that are not running or dangling.
+Any image that does not have any containers referring to it is called dangling.
+
+14) docker stats
+
+
+
+Docker images  --- Images are templates used to create docker containers.
+For each image in docker hub , there are tags available. Each tag refers to specific version.
+For example , -latest is used for latest version of the image 
+say -18.14 is to get 18.14 version of that image. 
+
+Images typically contains a union of layered filesystems stacked on top of each other.
+
+Container  -- is a running instance of an image .
+
+Images can be stored at local or remote locations. 
+Images are stored in a registry for ex. docker hub , docker hub is a registry where various images are stored.
+When firing the run command for an image , you can also give a name to the container using --name ooption .
+
+docker run --name MyUbuntu -it ubuntu:18.1
+-it is used to run the container in interactive mode.
+
+Once a container is created using run command ,it will start automatically.
+You can start , stop , pause or unpause containers using the container id or name.
+docker start MyUbuntu
+
+docker stop MyUbuntu
+
+docker pause MyUbuntu  --> container will stop accepting any commands.
+
+docker unpause MyUbuntu --> container will resume to accept commands.
+
+
+

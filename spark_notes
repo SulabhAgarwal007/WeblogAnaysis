@@ -1,0 +1,321 @@
+
+Apache Spark is a fast and  general purpose engine for large-scale data processing. Under the hood it works on a cluster of computers.
+
+it comprises of:
+	- A cluster computing engine
+	- A set of libraries, APIs and DSLs (domain specific language)
+
+Spark Core comprises of 2 parts - Compute engine and a set of APIs in Scala/Python/R/Java languages. Spark API in Spark Core is again of two types Structured (i.e. Dataframe and Dataset) and unstructured (i.e. RDDs, Accumulators and Broadcast variables which are low level) 
+
+Spark does not come with an in-built cluster resource manager like Yarn in Hadoop, nor it has a distributed storage system like HDFS. But the compute engine has capabilities to interact with RM like Yarn/Kubernetes/Mesos plugged in and Distributed storage like HDFS/GFS/CFS/S3
+
+Compute Engine in Spark Core provides Memory Mangement, Task Scheduling, Fault Tolerance and Interaction with Cluster Manager.
+
+Outside Spark core there are 4 libraries - 
+	- Sparl SQL: for SQL type capabilities on Structured data
+	- Streaming: Helps to consume and process continuous data streams
+	- MLlib: Machine Learning
+	- GraphX: For Graph algorithms
+
+
+Key benefits of Spark:
+	- Abstract Parallel Programming
+	- Unified Platform for Batch Processing, Streaming, Machine learning and Graph algo etc
+	- Ease of Use: Much simpler to use than Map Reduce and flexibility to mix and match the programming language based on use case.
+
+
+Spark Context Vs Spark Session: Prior to Spark 2.0 spark context was the single entry point for an application. To start a context, first SparkConf i.e. configuration parameter are required to be set and then passed on to the spark context. But flip side was that each program like SQL, Hive etc required their own spark context to operate. From spark 2.0, SparkSession provides a unified view of all contexts and no seperate contexts are required anymore.
+
+	val conf = new SparkConf().setAppName("WordCount")
+	//create spark context object
+	val sc = new SparkContext(conf)
+
+	import org.apache.spark.sql.SparkSession
+	val spark = SparkSession.builder
+				.appName("SparkSessionExample") 
+				.master("local[4]") 
+				.config("spark.sql.warehouse.dir", "target/spark-warehouse")
+				.enableHiveSupport()
+				.getOrCreate
+
+If there are multiple sessions within an application they share same spark context, but configurations can be different. Creating multiple Spark Context is not yet supported by spark. There can be only one context per JVM which connects to the cluster.
+
+https://medium.com/@achilleus/spark-session-10d0d66d1d24
+
+
+			/--Session \
+	Application --/		     -- Context --Cluster
+			\--Session /
+
+
+How do we run programs in Spark?
+	- Interactive clients: Scala Shell, PySpark, Notebook
+	- Submit a job: Spark-submit Utility
+
+Execution Process: When we submit any application, spark create Driver-Executers for each application. Driver is responsible for Analysing, Distributing, scheduling and monitoring of task. Executer only runs the code assigned by the driver and report back to Driver. Every application has its own Driver and Executers.
+
+When we start an application there are two modes - Client mode and Cluster mode. When we are in develepment and debug phase we want to get the status and messages locally for testing, hence client mode makes sense where Driver runs locally on the client Machine. While in production we want fault tolerance, hence Driver runs on a cluster mode on the cluster. Hence when we start a spark shell, that means we are running Driver from local.
+
+
+Executers always runs on cluster, but we have option for Driver. Driver can run on cluster in cluster mode, and on client in client mode.
+
+Spark supports 4 cluster managers for resource management:
+	- Apache Yarn
+	- Apache Mesos
+	- Kubernetes: General purpose contain orchestration platform from Google
+	- Standalone
+
+Spark coding begins with creating s Spark Session. Think of Spark session as a data structure where Driver maintains all the information including executor locations and status.
+
+   In client mode, using a Yarn Cluster manager:
+
+	Spark Shell (Spark Session) ----> Resource Manager  ----> Aplication Master (AM Container) ----> Executor Launcher ----> Reports to Driver
+
+	As soon we launch a spark session, it create a request to Resource manager to create a Yarn application
+	The Yarn RM starts an Application Mater (AM Container). For client mode, AM container acts as an Executor Launcher
+	AM Container will reach out to RM for further container.
+	The RM will allocate new container to AM container and AM container starts an Executer in each container.
+	After this these executors directly interact with the Driver running locally.
+
+
+   In Cluster Mode, using a yarn CM:
+	
+	- Client machine submit a packaged application to Spark-Submit utility.
+	- Spark Submit, request Yarn RM to create an Yarn Application
+	- Yarn Application creates an Application Master
+	- Application Master starts a Driver Program.Hence Driver runs on a cluster. ----> Here it is different from a client mode.
+	- Driver will request RM new containers where it runs Executors.
+	- These executors report back to Driver
+
+
+Spark RDD is a resilient, partitioned, distributed and immutable collection of data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------Data Bricks------------------
+
+Fundamental Azure Databricks components:
+	- Workspaces: 
+		It is an environment for accessing all your assets. It organizes notebook,libraries, Dashboard and experiment into folders and provide access to data 		objects in computational resources. By default workspace share objects with all the users having access to that workspace. Users can have private home 		folder as well. Workspace can be managed by UI, CLI or workspace API. 
+		
+		Folders hold all assets within a workspace. Check the icon for the object type contained. Use access control to manage collaboration. Special folders- 		Workspace, Shared & User
+			Workspace folder contains all assets in your organization
+			Shared folder contains objects shared across organization
+			User Folder contains folders for each registered user
+	- Cluster
+	- Notebook
+	- Tables
+	- Jobs
+
+Demo: Azure Portal > Azure data Bricks> New Resource> Launch Work Space> Add User and Groups> Create Folder in workspace for a task> Give 'Can Edit/Run/Manage/' permissions to user>
+
+Demo: how to use CLI for Azure databricks.
+	- From the Workspace User settings, generate a new Token
+
+	- Goto shell.azure.com and once connected use below command to create a virtual environment:
+		home:~$ virtualenv -p /usr/bin/python2.7 databrickscli
+
+	- Now to enter into that virtual env use:
+		home:~$ source databrickscli/bin/activate
+	post running this the prompt should change to reflect the above location
+
+	- Now we need to install databricks cli in our virtual environment, use
+		(databrickscli) home:~$ pip install databricks-cli
+	
+	- Next we need to configure this virtual env to go the workspace created:
+		(databrickscli) home:~$ databricks configure --token
+		Databricks Host (should begin with https://): https://westus.azuredatabricks.net 
+		Token: Paste the token gererated from 1st step
+
+	- Now we are all set and connect to our workspace
+		(databrickscli) home:~$ databricks -h
+		(databrickscli) home:~$ databricks workspace -h
+		(databrickscli) home:~$ databricks workspace list
+
+
+Azure databricks Cluster: 2 types 
+	- Interactive: Analyze data collboratively with interactive notebooks
+	- Job: for faster execution of automated jobs
+	- We can create cluster via UI or CLI. For CLI we login back into our virtual environment
+		home:~$ source databrickscli/bin/activate
+		(databrickscli) home:~$ code ./clouddrive/demo/intro/file.json	--> this will open a Json file which is a template for custer creation.
+		(databrickscli) home:~$ databricks cluster create --json-file ./clouddrive/demo/intro/file.json
+		(databrickscli) home:~$ databricks cluster list
+
+
+Notebook:It's a web based live and executable coding environment. When we import a notebook into a folder within our workspace we need to connect it to a cluster.
+	In the notebook cell if we have to use a different coding language then we specify it via % e.g. %md for markdown, %HTML, %scala, %sql etc
+
+	e.g.
+	%sql
+	CREATE TABLE Diamond USING CSV OPTIONS ( path "/Azure-path/file.csv", header "true");
+		
+Tables in databricks are equivalent to Dataframes in Spark but it comes with much more optimization.
+
+Jobs: Num ber of jobs in a workspace is limited to 1000 and number of concurrent runs a workspace can create is 1500
+
+
+---------------SPARKSQL-----------------
+  Schema: Definition for the column names and their data types
+	- Can be inferred from the data sourcr
+	- Can be specified first explicitly and then data can be read
+
+Since spark is a programming language in itself hence it has it's own data types:
+	org.apache.spark.sql.types
+
+Dataframes uses spark's data types rather than scala or python types.
+
+Loading data with Infer schema:
+
+	val df = spark.read
+		      .format("csv")
+		      .option("header","true")
+		      .option("inferSchema","true")
+		      .option("nullValue","NA")
+		      .ption("timestampFormat","yyyy-MM-dd'T'HH:mm:ss")
+		      .option("mode","failfast")
+		      .option("path","/home/file.csv")
+		      .load()
+
+	println(df.schema) -- Spark schema is a StructType which contains structFields for each column.
+
+Python StructType is a List of StructFields while Scala StructType is a Array of StructFields.
+
+To Define an schema for e.g.
+	
+	import org.apache.spark.sql.types._
+	val sampleSchema = StructType(Array(
+				StructField("timestamp", TimestampType, true),
+				StructField("age", LongType, true),
+				StructField("gender", StringType, true)
+					)
+				)
+Now to use this schema:
+	val df = spark.read
+		      .format("csv")
+		      .schema(sampleSchema)
+		      .option("header","true")
+		      .option("nullValue","NA")
+		      .option("timestampFormat","yyyy-MM-dd'T'HH:mm:ss")
+		      .option("mode","failfast")
+		      .load("/home/file.csv")
+		      
+To query this dataframe we have to convert it into a table or view. Data Frame methods to create a view (Global Temp and Local Temp):
+	1. createGlobalTempView
+	2. createOrReplaceGlobalTempView
+	3. createOrReplaceTempView
+	4. createTempView
+
+Local Temp view is visible at the sessional level, while Global Temp view is visible at application level across sessions.
+
+	df.createOrReplaceTempView("TempViewName") -- this temporary table is created at session level hence below statement can show details of the temp view.
+	spark.catalog.listTables.show() -- Catalog is the place where we can access database, tables and other metadata.
+
+	df.createOrReplaceGlobalTempView("GlobalTempViewName") --hence post this if we run above command again, we will not see this global table. Bcz Global table belongs to a system database called global_temp. Hence below statment will show both the temp tables:
+
+	spark.catalog.listTables("global_temp").show()
+
+Once a temp view or table is created we can execute normal sql queries on top of it.
+
+---------------
+
+---------------Data Sources------------
+
+common file types: parque, xml, avro, json, orc
+
+If we are dealing with structured or semi structured data from diff sources like casandra, redshift, elastic, salesforce etc, Spark dataframe provides 2 interfaces:
+	- DataFrameReader
+	- DataFrameWriter
+
+
+If source does not provide a schema or it does not support 2.x connectors then we fall back to RDDs
+
+DataFrameReader:
+	1. Format 2. option 3. schema 4 load
+e.g.
+	 
+	val df = spark.read
+		      .format("csv")
+		      .schema(sampleSchema)
+		      .option("header","true")
+		      .option("nullValue","NA")
+		      .option("timestampFormat","yyyy-MM-dd'T'HH:mm:ss")
+		      .option("mode","failfast")
+		      .load("/home/file.csv")
+
+
+format option: 
+	- csv
+	- parquet
+	- json
+	- orc
+	- com.databricks.spark.avro
+	- com.databricks.spark.xml
+
+
+mode option can have 3 values:
+	- permissive -- this will insert the mal formed records with null
+	- dropmalformed --this will drop the mal formed records
+	- failfast  --this raises an exception
+
+
+DataFrameWriter: Fundamentally same as DatFrameReader with base methods as format, option, mode and save.
+
+ The mode here have these options:
+	- append
+	- overwrite
+	- errorIfExists
+	- ignore
+
+there can be additional methods depending upon the connector like for hive connectors we have additional methods like:
+	- partitionBy
+	- bucketBy
+	- sortBy
+
+	df.write
+	  .format("json")
+	  .option("timestamp", "yyyy-MM-dd HH:mm:ss")
+	  .mode("overwrite")
+	  .save("/home/")
+
+# parquet is the defualt file format for spark df writer.
+
+for xml and avro, we need to manage dependencies:
+	sparl-shell --packages com.databricks:spark-xml_2.11:0.4.1, com.databricks:sparl-avro_2.11:0.4.1
+
+--JDBC Source:
+It allows connection to any database that supports SQL and allows JDBC connection like Oracle, SQL Server, MySQL, PostgreSQL
+
+DB Server IP
+DB Listner TCP/IP Port
+DB name
+Username & Pwd
+
+spark-shell --packages org.postgresql:postgresql:9.4.1207
+
+df.write
+  .format("jdbc")
+  .mode("overwrite")
+  .option("driver","org.postgresql.Driver")
+  .option("url","jdbc:postgresql://10.128.0.4:5432/sparkdb")
+  .option("dbtable", "survey_results")
+  .option("user","prashant")
+  .option("password","pandey")
+  .save()
+
+
+
+

@@ -1,0 +1,73 @@
+
+/* in local mode
+open cmd as admin
+spark-shell --master=local
+define file path as path = "C://user//sulabhagarwaliet6372//file_output_10_lakh_rec//"
+*/
+
+
+hdfs dfs -rm -r file_output_1_lakh_rec.csv
+
+hdfs dfs -ls file_output_1_lakh_rec.csv
+
+hdfs -dfs -copyFromLocal './data/weblogs_10_lakh_rec.txt'
+
+
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.types.{StructType, StructField, StringType}
+import org.apache.spark._
+    //import org.apache.spark.sql.SQLContext
+
+val sparkSession = SparkSession.builder.master("local").appName("webLogAnalysisApp").getOrCreate()
+
+val data = sparkSession.sparkContext.textFile("./weblogs_10_lakh_rec.txt")
+
+val split_data = data.map(_.split("\\s\\d+\\s\\D")).map(x=>Row(x(0),x(1)))
+    // pattern above can also be defined like pattern = "\\s\\d+\\s\\D".r
+
+    //Define schema for first splitting the entire string into 2 parts
+val schema= StructType("part1 part2".split(" ").map(a=>StructField(a,StringType, true)))
+
+    //val sqlContext = new SQLContext(sc)
+
+val split_df = sparkSession.createDataFrame(split_data, schema)
+split_df.registerTempTable("split_df")
+
+    /**Below statements can use to see the two parts of the string, however this is an action, hence may impact performance.
+     *val sql_data= sqlContext.sql("select * from split_df")
+     *sql_data.show()
+     */
+
+
+val part1_df = sparkSession.sql("select part1 from split_df")
+
+val temp_df = part1_df.withColumn("IP", split($"part1", " - - ").getItem(0)).withColumn("Date",split(split($"part1", " - - ").getItem(1)," ").getItem(0)).withColumn("Rest",split(split($"part1", " - - ").getItem(1)," ").getItem(3)).withColumn("Request_Type",split(split($"part1", " - - ").getItem(1)," ").getItem(4)).withColumn("Request_Status",split(split($"part1", " - - ").getItem(1)," ").getItem(5)).drop("part1")
+
+val temp_df1 = temp_df.withColumn("Main_Category", split($"Rest", "/").getItem(1)).withColumn("Sub_Category", split($"Rest", "/").getItem(2)).withColumn("Product", split($"Rest", "/").getItem(3)).drop("Rest")
+
+val temp_df2= temp_df1.withColumn("Date",regexp_replace(col("Date"),"\\[","")).withColumn("Date",substring(col("Date"),0,11)).withColumn("Request_Type", regexp_replace(col("Request_Type"),"\"",""))
+
+
+temp_df2.write.format("csv").save("file_output_10_lakh_rec.csv")
+
+temp_df2.registerTempTable("temp_table")
+
+temp_df2.printSchema()
+	
+var category_count = sparkSession.sql("select Main_Category, count(IP) from temp_table group by Main_Category order by count(IP) desc")
+category_count.show()
+
+var sub_category_count = sparkSession.sql("select Sub_Category, count(IP) from temp_table group by Sub_Category order by count(IP) desc")
+sub_category_count.show()
+
+var req_status_count = sparkSession.sql("select request_status, count(*) from temp_table group by request_status order by count(*) desc")
+req_status_count.show()
+
+mysql -h cxln2.c.thelab-240901.internal -u sqoopuser -pNHkkP876rp
+
+use sqoopex;
+
+create table web_log_data(ip varchar(20), date varchar(30), request_type varchar(10), request_status varchar(10), main_category varchar(50), sub_category varchar(50), product varchar(50));
+
+sqoop export -connect jdbc:mysql://cxln2.c.thelab-240901.internal/sqoopex -username sqoopuser -P -table web_log_data -export-dir /user/sulabhagarwaliet6372/file_output_10_lakh_rec.csv/ -m 1

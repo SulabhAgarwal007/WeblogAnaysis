@@ -1,0 +1,34 @@
+Python :
+--------------
+
+Python is dynamically typed language.
+It is case sensitive.
+
+Comments are mentioned using #.
+Scope is defined using indentation.
+
+def is used to define a function.
+help(int) will display all the function available in functions class.
+
+Strings can be defined using both single and double strings. If there is a single quoe in string , you can define the complete string using double quote and vice versa. 
+
+Datatypes in python:
+---------------------
+
+int , float , complex , string , 
+
+List , set , dict and tuple
+OPerators in python :
+
+=  assignment operator . can work on multiple variables at a time.
+==
+!
+and
+or
+not 
+> , <,>=, <=
+
+in -- checks if a particular entry is present in a collection.
+e.g. i= 2
+	 l = [1,2,3,4]
+	 i in l returns true.

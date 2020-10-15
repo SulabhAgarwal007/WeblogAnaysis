@@ -1,0 +1,18 @@
+Web Analytics POC:
+
+parse web logs:
+50.57.190.149 - - [22/Apr/2012:07:12:41 +0530] "GET /computers/laptops.html?brand=819 HTTP/1.0" 200 12530 "-" "-"
+
+KPIs:
+1. Parse logs and convert request string into structured format (/a/b/c/d  =>  a	b	c	d)
+50.57.190.149	-	-	22/Apr/2012:07:12:41 +0530	GET /computers/laptops.html?brand=819 HTTP/1.0	computers	-	-	laptops.html	brand=819	200	12530	-	-
+
+2. count of page views by individual user
+3. How much time a user has spent on a perticular page (visit duration per user per page)
+
+4. Top / Bottom 5 :  catagery-1/ catagery-2 / page / user-agent / referal / users / entry pages / exit pages / 
+(Exclude status code other than 200, also exclude record related to css/js/image)
+
+5. Total pageviews / Category wise pageviews / Unique pageviews
+
+6. count of status code = 200 / 404 / 400 / 500
